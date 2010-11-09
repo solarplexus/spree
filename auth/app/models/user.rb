@@ -1,5 +1,8 @@
 class User < ActiveRecord::Base
 
+  devise :database_authenticatable, :token_authenticatable, :http_authenticatable, :registerable,
+          :lockable, :recoverable, :rememberable, :trackable, :validatable, :encryptable
+
   has_many :orders
   has_and_belongs_to_many :roles
   belongs_to :ship_address, :foreign_key => "ship_address_id", :class_name => "Address"
