@@ -12,17 +12,31 @@ class UserSessionsController < Spree::BaseController
   end
 
   def create
-    create_user_session(params[:user_session])
-    # not_need_user_auto_creation =
-    #     user_without_openid(params[:user_session]) ||
-    #     user_with_openid_exists?(:openid_identifier => params['openid.identity']) ||
-    #     user_with_openid_exists?(params[:user_session])
+    resource = warden.authenticate!(:scope => resource_name, :recall => "new")
+    set_flash_message :notice, :signed_in
+    if user_signed_in?
 
-    # if not_need_user_auto_creation
-    #   create_user_session(params[:user_session])
-    # else
-    #   create_user(params[:user_session])
-    # end
+      respond_to do |format|
+        format.html {
+          flash[:notice] = t("logged_in_succesfully") unless session[:return_to]
+          redirect_back_or_default(products_path)
+        }
+        format.js {
+          user = resource.record
+          render :json => {:ship_address => user.ship_address, :bill_address => user.bill_address}.to_json
+        }
+      end
+    else
+      respond_to do |format|
+        format.html {
+          flash.now[:error] = t("login_failed")
+          render :action => :new
+        }
+        format.js { render :json => false }
+        format.json {render :text => 'access_denied', :status => 401}
+      end
+    end
+    redirect_back_or_default(products_path) unless performed?
   end
 
   def destroy
