@@ -4,7 +4,9 @@ Spree::BaseController.class_eval do
   include Spree::AuthUser
 
   # graceful error handling for cancan authorization exceptions
-  rescue_from CanCan::AccessDenied, :with => :unauthorized
+  rescue_from CanCan::AccessDenied do |exception|
+    return unauthorized
+  end
 
   private
   # authorize the user as a guest if the have a valid token
@@ -43,6 +45,9 @@ Spree::BaseController.class_eval do
       end
       format.xml do
         request_http_basic_authentication 'Web Password'
+      end
+      format.json do
+        render :text => "Not Authorized", :status => 422
       end
     end
   end
